@@ -1,0 +1,12 @@
+# PyTorch는 환경에 맞는 빌드를 먼저 설치한다(README 참고). Colab에는 이미 들어 있다.
+torch
+transformers
+sentencepiece
+protobuf
+pandas
+scikit-learn
+joblib
+matplotlib
+tqdm
+flask
+pytest

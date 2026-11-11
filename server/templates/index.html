@@ -1,0 +1,91 @@
+<!doctype html>
+<html lang="ko">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>낚시성 제목 판별기</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+  <div id="demo-notice" class="demo-notice" role="status" hidden>
+    <strong>데모 모드</strong>
+    <span>학습된 모델이 아직 연결되지 않았습니다. 아래 확률은 화면 확인용 가짜 값이며 실제 모델의 판별 결과가 아닙니다.</span>
+  </div>
+
+  <main class="page">
+    <header class="masthead">
+      <p class="kicker">딥러닝 팀 프로젝트</p>
+      <h1>낚시성 제목 판별기</h1>
+      <p class="lede">뉴스 제목을 넣으면 낚시성 제목인지 일반 제목인지 판별하고, 두 경우의 확률을 보여 줍니다.</p>
+    </header>
+
+    <form id="predict-form" class="card" novalidate>
+      <div class="field">
+        <div class="field-head">
+          <label for="title">뉴스 제목</label>
+          <span id="title-counter" class="counter" aria-live="polite">0 / 200</span>
+        </div>
+        <textarea id="title" name="title" rows="2" autocomplete="off" spellcheck="false"
+                  placeholder="예: 정부, 내년 최저임금 9,860원으로 확정"></textarea>
+      </div>
+
+      <div id="body-field" class="field" hidden>
+        <div class="field-head">
+          <label for="body">기사 본문 <span class="optional">(선택)</span></label>
+          <span id="body-counter" class="counter" aria-live="polite"></span>
+        </div>
+        <textarea id="body" name="body" rows="5" placeholder="본문을 함께 넣으면 제목과 본문을 같이 보고 판별합니다."></textarea>
+      </div>
+
+      <div class="actions">
+        <button id="submit" type="submit">판별하기</button>
+        <span class="hint">Enter 로 바로 판별</span>
+      </div>
+
+      <p id="error" class="error" role="alert" aria-live="assertive" hidden></p>
+    </form>
+
+    <section class="examples" aria-labelledby="examples-heading">
+      <h2 id="examples-heading">예시 제목</h2>
+      <ul class="chips">
+        <li><button type="button" class="chip">한국은행, 기준금리 연 3.5%로 동결</button></li>
+        <li><button type="button" class="chip">"이것" 먹었더니 충격적인 변화가... 결국</button></li>
+        <li><button type="button" class="chip">서울 지하철 4호선 오늘 첫차부터 정상 운행</button></li>
+        <li><button type="button" class="chip">유명 배우 A씨, 알고 보니 정체가?!</button></li>
+        <li><button type="button" class="chip">기상청 "주말 전국 비, 기온 뚝 떨어져"</button></li>
+        <li><button type="button" class="chip">경악! 아무도 몰랐던 이유는</button></li>
+      </ul>
+    </section>
+
+    <section id="result" class="card result" aria-live="polite" aria-labelledby="result-heading" hidden>
+      <h2 id="result-heading" class="visually-hidden">판별 결과</h2>
+      <p id="verdict" class="verdict"></p>
+      <p id="verdict-title" class="verdict-title"></p>
+      <div class="bars">
+        <div class="bar-row" data-kind="clickbait">
+          <span class="bar-label">낚시성</span>
+          <div class="bar-track"><div class="bar-fill" id="bar-clickbait"></div></div>
+          <span class="bar-value" id="pct-clickbait">0%</span>
+        </div>
+        <div class="bar-row" data-kind="normal">
+          <span class="bar-label">일반</span>
+          <div class="bar-track"><div class="bar-fill" id="bar-normal"></div></div>
+          <span class="bar-value" id="pct-normal">0%</span>
+        </div>
+      </div>
+    </section>
+
+    <section id="history" class="history" aria-labelledby="history-heading" hidden>
+      <h2 id="history-heading">최근 판별 기록</h2>
+      <p id="history-empty" class="history-empty">아직 판별한 제목이 없습니다.</p>
+      <ol id="history-list" class="history-list"></ol>
+    </section>
+
+    <footer class="footer">
+      <span id="model-name">모델 정보를 불러오는 중…</span>
+    </footer>
+  </main>
+
+  <script src="{{ url_for('static', filename='app.js') }}"></script>
+</body>
+</html>
