@@ -88,14 +88,21 @@
     resultBox.dataset.label = result.label;
     $("verdict").textContent = verdictFor(result.label, prob);
     $("verdict-title").textContent = title;
+    $("stamp-label").textContent = LABEL_KO[result.label];
+    $("stamp-sub").textContent = `확률 ${percent(prob)}`;
+    // 반반에 가까우면 도장을 점선으로 흐리게 찍어 확신이 낮다는 것을 보인다.
+    $("stamp").dataset.weak = String(prob < 0.6);
+    $("result-empty").hidden = true;
 
     for (const kind of ["clickbait", "normal"]) {
       $(`bar-${kind}`).style.width = "0";
       $(`pct-${kind}`).textContent = "0%";
     }
     resultBox.hidden = false;
-    // 너비 0을 먼저 그리게 해야 막대가 0부터 다시 자라는 전환이 일어난다.
+    resultBox.classList.remove("stamped");
+    // 너비 0과 도장 없는 상태를 먼저 그리게 해야 막대와 도장 움직임이 매번 처음부터 다시 일어난다.
     void resultBox.offsetWidth;
+    resultBox.classList.add("stamped");
     setBar("clickbait", result.prob_clickbait);
     setBar("normal", result.prob_normal);
   }
@@ -227,6 +234,12 @@
     });
   }
 
+  $("today").textContent = new Date().toLocaleDateString("ko-KR", {
+    year: "numeric",
+    month: "long",
+    day: "numeric",
+    weekday: "long",
+  });
   updateTitleCounter();
   loadInfo();
 })();

@@ -39,10 +39,15 @@ def test_report_files_and_misclassified_ordering(tmp_path: Path) -> None:
             "title": ["확신한 오탐", "덜 확신한 오탐", "놓친 낚시", "맞힌 일반"],
             "label": [0, 0, 1, 0],
             "category": ["경제", "정치", "사회", "연예"],
+            "source": ["NonClickbait_Auto", "NonClickbait_Auto", "Clickbait_Auto", "NonClickbait_Auto"],
         }
     )
     result = evaluate(Fixed(), df)
     assert result.metrics["confusion_matrix"] == [[1, 2], [1, 0]]
+    assert result.metrics["by_source"] == {
+        "Clickbait_Auto": {"n": 1, "accuracy": 0.0, "mean_prob_clickbait": 0.2},
+        "NonClickbait_Auto": {"n": 3, "accuracy": 0.3333, "mean_prob_clickbait": 0.5167},
+    }
     wrong = result.misclassified
     assert list(wrong["title"]) == ["확신한 오탐", "놓친 낚시", "덜 확신한 오탐"]
     assert list(wrong["error"]) == ["FP", "FN", "FP"]
@@ -53,6 +58,6 @@ def test_report_files_and_misclassified_ordering(tmp_path: Path) -> None:
     metrics = json.loads((out / "metrics.json").read_text(encoding="utf-8"))
     assert metrics["f1"] == 0.0 and metrics["accuracy"] == 0.25
     assert list(pd.read_csv(out / "misclassified.csv", encoding="utf-8-sig").columns) == [
-        "title", "true", "pred", "prob_clickbait", "category", "error"
+        "title", "true", "pred", "prob_clickbait", "category", "source", "error"
     ]
     assert "| fixed | fixed | title | test.csv | 4 |" in comparison_table(tmp_path / "reports")

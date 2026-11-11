@@ -43,7 +43,7 @@ def load_scorer(model_dir: Path, device: str = "cpu") -> Scorer:
 @dataclass(frozen=True)
 class EvalResult:
     metrics: dict[str, object]
-    # title, true, pred, prob_clickbait, category, error. 가장 확신한 오답이 먼저 온다.
+    # title, true, pred, prob_clickbait, category, source, error. 가장 확신한 오답이 먼저 온다.
     misclassified: pd.DataFrame
 
 
@@ -60,6 +60,7 @@ def evaluate(scorer: Scorer, df: pd.DataFrame, bodies: dict[str, str] | None = N
             "pred": [LABEL_NAMES[y] for y in y_pred[wrong]],
             "prob_clickbait": np.round(prob[wrong], 4),
             "category": df["category"][wrong].to_numpy(),
+            "source": df["source"][wrong].to_numpy(),
             "error": np.where(y_pred[wrong] == CLICKBAIT, "FP", "FN"),
             # 정답 반대쪽으로 얼마나 확신했는가.
             "confidence": np.abs(prob[wrong] - 0.5),
@@ -68,7 +69,25 @@ def evaluate(scorer: Scorer, df: pd.DataFrame, bodies: dict[str, str] | None = N
     misclassified = (
         misclassified.sort_values("confidence", ascending=False, kind="stable").drop(columns="confidence").reset_index(drop=True)
     )
-    return EvalResult(metrics=compute_metrics(y_true, prob), misclassified=misclassified)
+    metrics = {**compute_metrics(y_true, prob), "by_source": _by_source(df["source"], y_true == y_pred, prob)}
+    return EvalResult(metrics=metrics, misclassified=misclassified)
+
+
+def _by_source(source: pd.Series, correct: np.ndarray, prob: np.ndarray) -> dict[str, dict[str, object]]:
+    """원본 하위 묶음(Clickbait_Auto, Clickbait_Direct, NonClickbait_Auto)별 정답률.
+
+    한 묶음은 라벨이 하나뿐이라, 낚시성 묶음의 정답률은 재현율이고 일반 묶음의 정답률은 특이도다.
+    어느 묶음에서 틀리는지가 제목만으로 풀 수 있는 문제인지를 알려 준다.
+    """
+    frame = pd.DataFrame({"source": source.to_numpy(), "correct": correct, "prob": prob})
+    return {
+        str(name): {
+            "n": int(len(group)),
+            "accuracy": round(float(group["correct"].mean()), 4),
+            "mean_prob_clickbait": round(float(group["prob"].mean()), 4),
+        }
+        for name, group in frame.groupby("source", sort=True)
+    }
 
 
 def _plot_confusion(matrix: list[list[int]], title: str, path: Path) -> None:

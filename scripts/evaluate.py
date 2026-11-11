@@ -49,6 +49,8 @@ def main() -> None:
     m = result.metrics
     print(f"[{name}] n={m['n']} 정확도 {m['accuracy']:.4f} 정밀도 {m['precision']:.4f} 재현율 {m['recall']:.4f} F1 {m['f1']:.4f}")
     print(f"혼동행렬(행: 실제 일반/낚시성, 열: 예측 일반/낚시성): {m['confusion_matrix']}")
+    for source, row in m["by_source"].items():
+        print(f"  {source or '(출처 없음)'}: n={row['n']} 정답률 {row['accuracy']:.4f} 평균 낚시성 확률 {row['mean_prob_clickbait']:.4f}")
     print(f"오분류 {len(result.misclassified)}건. 보고서를 {out_dir} 에 썼다.")
 
 
